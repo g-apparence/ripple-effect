@@ -18,6 +18,7 @@ class WaterRipleController {
   late int widthR, heightR;
   late TilesMap<double> current, previous; //V2
   late img.Image _image, _sourceImg;
+  DateTime? lastUpdate;
 
   init(double width, double height, double pixelRatio, {Uint8List? backgroundBytes}) {
     if (_hasInit) return;
@@ -38,8 +39,10 @@ class WaterRipleController {
     _hasInit = true;
   }
 
-  update() {
-    if (updating) return;
+  Future update() async {
+    if (updating || (lastUpdate != null && DateTime.now().difference(lastUpdate!).inMilliseconds < 5)) {
+      return;
+    }
     updating = true;
     for (int y = 1; y < heightR - 1; y += 1) {
       for (int x = 1; x < widthR - 1; x += 1) {
@@ -52,16 +55,17 @@ class WaterRipleController {
         current.setValue(x, y, color);
       }
     }
-    for (int y = 3; y < heightR - 3; y += 1) {
-      for (int x = 3; x < widthR - 3; x += 1) {
+    for (int y = 1; y < heightR - 1; y += 1) {
+      for (int x = 1; x < widthR - 1; x += 1) {
         _refraction(x, y);
       }
     }
-    // //copy current to previous
+    // copy current to previous
     var temp = previous;
     previous = current;
     current = temp;
     updating = false;
+    lastUpdate = DateTime.now();
   }
 
   void touch(double x, double y, int radius) {
@@ -72,21 +76,20 @@ class WaterRipleController {
       for (int x = 1; x < widthR - 1; x += 1) {
         var point = v.Vector2(x.toDouble(), y.toDouble());
         if (point.distanceTo(center) <= radius) {
-          previous.setValue(x, y, 1000);
+          previous.setValue(x, y, 800);
         }
       }
     }
   }
 
   void _refraction(int x, int y) {
-    var xOffset = (current.getOne(x - 3, y)! - previous.getOne(x + 3, y)!).toInt();
-    var yOffset = (current.getOne(x, y - 3)! - previous.getOne(x, y + 3)!).toInt();
+    var xOffset = (current.getOne(x - 1, y)! - current.getOne(x + 1, y)!).toInt();
+    var yOffset = (current.getOne(x, y - 1)! - current.getOne(x, y + 1)!).toInt();
     var pixel2Src = _sourceImg.getPixel(
       (x + xOffset).clamp(0, widthR - 1),
       (y + yOffset).clamp(0, heightR - 1),
     );
-    RvbColor pixel2 = RvbColor.fromRgba(pixel2Src);
-    _image.setPixel(x, y, pixel2.toRgba());
+    _image.setPixel(x, y, pixel2Src);
   }
 
   img.Image get image => _image;

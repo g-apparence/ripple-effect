@@ -28,7 +28,6 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
   ui.Image? _image;
   Uint8List? _bgBytes;
   late StreamSubscription _streamSubscription;
-  Offset? touchPosition;
 
   @override
   void initState() {
@@ -39,12 +38,7 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
       duration: Duration(seconds: 1),
     )
       ..addListener(() {
-        if (touchPosition != null) {
-          _process.touch(touchPosition!.dx, touchPosition!.dy, 2);
-          touchPosition = null;
-        } else {
-          _process.update();
-        }
+        _process.update();
       })
       ..repeat();
   }
@@ -60,8 +54,7 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return GestureDetector(
       onTapDown: (details) {
-        touchPosition = details.localPosition;
-        // _controller.forward(from: 0);
+        _process.touch(details.localPosition.dx, details.localPosition.dy, 4);
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
