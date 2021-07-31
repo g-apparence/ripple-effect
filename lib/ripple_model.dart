@@ -76,7 +76,7 @@ class WaterRipleController {
       for (int x = 1; x < widthR - 1; x += 1) {
         var point = v.Vector2(x.toDouble(), y.toDouble());
         if (point.distanceTo(center) <= radius) {
-          previous.setValue(x, y, 800);
+          previous.setValue(x, y, 1000);
         }
       }
     }
@@ -85,6 +85,8 @@ class WaterRipleController {
   void _refraction(int x, int y) {
     var xOffset = (current.getOne(x - 1, y)! - current.getOne(x + 1, y)!).toInt();
     var yOffset = (current.getOne(x, y - 1)! - current.getOne(x, y + 1)!).toInt();
+    xOffset = xOffset.clamp(-10, 10);
+    yOffset = yOffset.clamp(-10, 10);
     var pixel2Src = _sourceImg.getPixel(
       (x + xOffset).clamp(0, widthR - 1),
       (y + yOffset).clamp(0, heightR - 1),
