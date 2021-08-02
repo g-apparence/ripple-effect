@@ -25,7 +25,6 @@ class WaterRipleController {
     this.width = width;
     this.height = height;
     this.ratio = pixelRatio;
-
     widthR = width ~/ ratio;
     heightR = height ~/ ratio;
     current = TilesMap.generate(widthR, heightR, 0);

@@ -10,11 +10,30 @@ import 'package:image/image.dart' as img;
 import 'ripple_isolate.dart';
 import 'ripple_renderobject.dart';
 
+// check ImageShader
+//
+// FragmentShader coming soon
+// https://github.com/flutter/engine/pull/26996
+
+class RippleController extends ChangeNotifier {
+  Offset? _position;
+
+  Offset? get position => _position;
+
+  RippleController() {}
+
+  void touch(Offset offset) {
+    _position = offset;
+    notifyListeners();
+  }
+}
+
 class RippleEffect extends StatefulWidget {
   final Widget? child;
   final Size? size;
+  final RippleController? rippleController;
 
-  const RippleEffect({Key? key, this.child, this.size}) : super(key: key);
+  const RippleEffect({Key? key, this.child, this.size, this.rippleController}) : super(key: key);
 
   @override
   _RippleEffectState createState() => _RippleEffectState();
@@ -44,8 +63,19 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.rippleController != null) {
+      widget.rippleController!.addListener(_onExternalTouch);
+    }
+  }
+
+  @override
   void dispose() {
     super.dispose();
+    if (widget.rippleController != null) {
+      widget.rippleController!.removeListener(_onExternalTouch);
+    }
     _streamSubscription.cancel();
     _process.stop();
   }
@@ -54,7 +84,7 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return GestureDetector(
       onTapDown: (details) {
-        _process.touch(details.localPosition.dx, details.localPosition.dy, 4);
+        _process.touch(details.localPosition.dx, details.localPosition.dy, 1);
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -96,6 +126,14 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
       (imgRes) {
         setState(() => this._image = imgRes);
       },
+    );
+  }
+
+  void _onExternalTouch() {
+    _process.touch(
+      widget.rippleController!.position!.dx,
+      widget.rippleController!.position!.dy,
+      4,
     );
   }
 
