@@ -10,11 +10,6 @@ import 'package:image/image.dart' as img;
 import 'ripple_isolate.dart';
 import 'ripple_renderobject.dart';
 
-// check ImageShader
-//
-// FragmentShader coming soon
-// https://github.com/flutter/engine/pull/26996
-
 class RippleController extends ChangeNotifier {
   Offset? _position;
 

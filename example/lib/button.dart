@@ -55,7 +55,7 @@ class _MyPageState extends State<MyPage> {
             ),
           ),
           Positioned(
-            top: 420,
+            bottom: 80,
             left: 0,
             right: 0,
             child: Row(
