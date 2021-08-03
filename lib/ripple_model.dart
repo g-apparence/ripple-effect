@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:vector_math/vector_math.dart' as v;
@@ -38,33 +39,33 @@ class WaterRipleController {
     _hasInit = true;
   }
 
-  Future update() async {
-    if (updating || (lastUpdate != null && DateTime.now().difference(lastUpdate!).inMilliseconds < 5)) {
-      return;
-    }
+  Future update() {
+    if (updating) return Future.value();
     updating = true;
-    for (int y = 1; y < heightR - 1; y += 1) {
-      for (int x = 1; x < widthR - 1; x += 1) {
-        var c1 = previous.getOne(x - 1, y)!;
-        var c2 = previous.getOne(x + 1, y)!;
-        var c3 = previous.getOne(x, y - 1)!;
-        var c4 = previous.getOne(x, y + 1)!;
-        var color = (c1 + c2 + c3 + c4) / 2 - current.getOne(x, y)!;
-        color *= dampening;
-        current.setValue(x, y, color);
+    return Future(() {
+      for (int y = 1; y < heightR - 1; y += 1) {
+        for (int x = 1; x < widthR - 1; x += 1) {
+          var c1 = previous.getOne(x - 1, y)!;
+          var c2 = previous.getOne(x + 1, y)!;
+          var c3 = previous.getOne(x, y - 1)!;
+          var c4 = previous.getOne(x, y + 1)!;
+          var color = (c1 + c2 + c3 + c4) / 2 - current.getOne(x, y)!;
+          color *= dampening;
+          current.setValue(x, y, color);
+        }
       }
-    }
-    for (int y = 1; y < heightR - 1; y += 1) {
-      for (int x = 1; x < widthR - 1; x += 1) {
-        _refraction(x, y);
+      for (int y = 1; y < heightR - 1; y += 1) {
+        for (int x = 1; x < widthR - 1; x += 1) {
+          _refraction(x, y);
+        }
       }
-    }
-    // copy current to previous
-    var temp = previous;
-    previous = current;
-    current = temp;
-    updating = false;
-    lastUpdate = DateTime.now();
+      // copy current to previous
+      var temp = previous;
+      previous = current;
+      current = temp;
+      updating = false;
+      lastUpdate = DateTime.now();
+    });
   }
 
   void touch(double x, double y, int radius) {
