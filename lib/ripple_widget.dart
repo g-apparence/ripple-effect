@@ -15,7 +15,7 @@ class RippleController extends ChangeNotifier {
 
   Offset? get position => _position;
 
-  RippleController() {}
+  RippleController();
 
   void touch(Offset offset) {
     _position = offset;
@@ -23,12 +23,28 @@ class RippleController extends ChangeNotifier {
   }
 }
 
+enum RippleEffectBehavior {
+  /// the ripple effect will be shown whenever you touch the child
+  onTouch,
+
+  /// no effect on touch, you may use this with a [RippleController] to show a
+  /// ripple using reflection on child where you want manually.
+  none,
+}
+
 class RippleEffect extends StatefulWidget {
   final Widget? child;
   final Size? size;
+  final RippleEffectBehavior behavior;
   final RippleController? rippleController;
 
-  const RippleEffect({Key? key, this.child, this.size, this.rippleController}) : super(key: key);
+  const RippleEffect({
+    Key? key,
+    this.child,
+    this.size,
+    this.rippleController,
+    this.behavior = RippleEffectBehavior.onTouch,
+  }) : super(key: key);
 
   @override
   _RippleEffectState createState() => _RippleEffectState();
@@ -79,12 +95,16 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return GestureDetector(
       onTapDown: (details) {
-        _process.touch(details.localPosition.dx, details.localPosition.dy, 1);
+        if (widget.behavior == RippleEffectBehavior.onTouch) {
+          _process.touch(details.localPosition.dx, details.localPosition.dy, 1);
+        }
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          Future.delayed(Duration(seconds: 2), _startProcess);
-          // WidgetsBinding.instance!.addPostFrameCallback((timeStamp) => _startProcess());
+          WidgetsBinding.instance!.addPostFrameCallback((_) => Future.delayed(
+                Duration(milliseconds: 100),
+                _startProcess,
+              ));
           return RepaintBoundary(
             key: _repaintKey,
             child: RippleRenderObject(

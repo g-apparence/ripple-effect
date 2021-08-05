@@ -86,8 +86,12 @@ class WaterRippleProcess {
 
   static void _update(WaterRippleProcessData data) async {
     var _toIsolate = ReceivePort();
-    var waterRipleController = WaterRipleController();
-    waterRipleController.init(data.width, data.height, data.pixelRatio, backgroundBytes: data.backgroundBytes);
+    var waterRipleController = WaterRipleController.init(
+      data.width,
+      data.height,
+      data.pixelRatio,
+      backgroundBytes: data.backgroundBytes!,
+    );
     data.sendPort.send(_toIsolate.sendPort);
 
     _toIsolate.listen((message) {

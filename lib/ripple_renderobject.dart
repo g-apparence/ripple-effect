@@ -23,7 +23,7 @@ class RippleRender extends RenderProxyBox {
   bool _alwaysIncludeSemantics;
   ui.Image? image;
 
-  final painter = Paint();
+  final painter = Paint()..isAntiAlias = true;
 
   RippleRender({
     this.image,

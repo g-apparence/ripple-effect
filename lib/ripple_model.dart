@@ -4,16 +4,13 @@ import 'dart:typed_data';
 import 'package:vector_math/vector_math.dart' as v;
 import 'package:image/image.dart' as img;
 
-import 'rvbcolor.dart';
 import 'tile_map.dart';
-
-const double dampening = .95;
 
 class WaterRipleController {
   late double width;
   late double height;
   late double ratio;
-  bool _hasInit = false;
+  double dampening;
   bool updating = false;
 
   late int widthR, heightR;
@@ -21,22 +18,43 @@ class WaterRipleController {
   late img.Image _image, _sourceImg;
   DateTime? lastUpdate;
 
-  init(double width, double height, double pixelRatio, {Uint8List? backgroundBytes}) {
-    if (_hasInit) return;
-    this.width = width;
-    this.height = height;
-    this.ratio = pixelRatio;
-    widthR = width ~/ ratio;
-    heightR = height ~/ ratio;
-    current = TilesMap.generate(widthR, heightR, 0);
-    previous = TilesMap.generate(widthR, heightR, 0);
-    if (backgroundBytes == null) {
-      _image = img.Image(widthR, heightR);
-    } else {
-      _image = img.Image.fromBytes(width.toInt(), height.toInt(), backgroundBytes, format: img.Format.rgba);
-      _sourceImg = _image.clone();
-    }
-    _hasInit = true;
+  WaterRipleController._({
+    required this.width,
+    required this.height,
+    required this.ratio,
+    required this.dampening,
+    required this.widthR,
+    required this.heightR,
+    required this.current,
+    required this.previous,
+    required img.Image image,
+    required img.Image srcImage,
+  })  : updating = false,
+        _image = image,
+        _sourceImg = srcImage;
+
+  factory WaterRipleController.init(
+    double width,
+    double height,
+    double pixelRatio, {
+    required Uint8List backgroundBytes,
+    double dampening = .95,
+  }) {
+    var widthR = width ~/ pixelRatio;
+    var heightR = height ~/ pixelRatio;
+    var _image = img.Image.fromBytes(width.toInt(), height.toInt(), backgroundBytes, format: img.Format.rgba);
+    return WaterRipleController._(
+      width: width,
+      height: height,
+      ratio: pixelRatio,
+      widthR: widthR,
+      heightR: heightR,
+      current: TilesMap.generate(widthR, heightR, 0),
+      previous: TilesMap.generate(widthR, heightR, 0),
+      image: _image,
+      srcImage: _image.clone(),
+      dampening: dampening,
+    );
   }
 
   Future update() {
@@ -83,14 +101,15 @@ class WaterRipleController {
   }
 
   void _refraction(int x, int y) {
-    var xOffset = (current.getOne(x - 1, y)! - current.getOne(x + 1, y)!).toInt();
-    var yOffset = (current.getOne(x, y - 1)! - current.getOne(x, y + 1)!).toInt();
-    xOffset = xOffset.clamp(-10, 10);
-    yOffset = yOffset.clamp(-10, 10);
+    var xOffset = (current.getOne(x + 1, y)! - current.getOne(x - 1, y)!).toInt();
+    var yOffset = (current.getOne(x, y + 1)! - current.getOne(x, y - 1)!).toInt();
+    xOffset = xOffset.clamp(-8, 8);
+    yOffset = yOffset.clamp(-8, 8);
     var pixel2Src = _sourceImg.getPixel(
       (x + xOffset).clamp(0, widthR - 1),
       (y + yOffset).clamp(0, heightR - 1),
     );
+
     _image.setPixel(x, y, pixel2Src);
   }
 
