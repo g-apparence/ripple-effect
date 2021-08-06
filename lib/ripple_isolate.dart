@@ -10,9 +10,19 @@ class WaterRippleProcessData {
   final double height;
   final double pixelRatio;
   final Uint8List? backgroundBytes;
+  final double dampening;
+  final double pulsations;
   SendPort sendPort;
 
-  WaterRippleProcessData(this.sendPort, this.width, this.height, this.pixelRatio, {this.backgroundBytes});
+  WaterRippleProcessData(
+    this.sendPort,
+    this.width,
+    this.height,
+    this.pixelRatio, {
+    this.backgroundBytes,
+    required this.dampening,
+    required this.pulsations,
+  });
 }
 
 class TouchData {
@@ -35,6 +45,8 @@ class WaterRippleProcess {
   Stream<img.Image> runIsolate({
     required double width,
     required double height,
+    required double dampening,
+    required double pulsations,
     required pixelRatio,
     Uint8List? backgroundBytes,
   }) {
@@ -60,6 +72,8 @@ class WaterRippleProcess {
           height,
           pixelRatio,
           backgroundBytes: backgroundBytes,
+          dampening: dampening,
+          pulsations: pulsations,
         )).then((value) => isolate = value);
     _stream = _streamController!.stream.asBroadcastStream();
     return _stream!;
@@ -86,10 +100,12 @@ class WaterRippleProcess {
 
   static void _update(WaterRippleProcessData data) async {
     var _toIsolate = ReceivePort();
-    var waterRipleController = WaterRipleController.init(
+    var waterRipleController = WaterRipple.init(
       data.width,
       data.height,
       data.pixelRatio,
+      dampening: data.dampening,
+      pulsations: data.pulsations,
       backgroundBytes: data.backgroundBytes!,
     );
     data.sendPort.send(_toIsolate.sendPort);

@@ -37,12 +37,16 @@ class RippleEffect extends StatefulWidget {
   final Size? size;
   final RippleEffectBehavior behavior;
   final RippleController? rippleController;
+  final double dampening;
+  final double pulsations;
 
   const RippleEffect({
     Key? key,
     this.child,
     this.size,
     this.rippleController,
+    this.dampening = .985,
+    this.pulsations = 2.2,
     this.behavior = RippleEffectBehavior.onTouch,
   }) : super(key: key);
 
@@ -102,7 +106,7 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
       child: LayoutBuilder(
         builder: (context, constraints) {
           WidgetsBinding.instance!.addPostFrameCallback((_) => Future.delayed(
-                Duration(milliseconds: 100),
+                Duration(milliseconds: 500),
                 _startProcess,
               ));
           return RepaintBoundary(
@@ -128,6 +132,8 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
       height: image.height.toDouble(),
       pixelRatio: 1.0,
       backgroundBytes: _bgBytes,
+      dampening: widget.dampening,
+      pulsations: widget.pulsations,
     );
     _streamSubscription = _stream!.listen(_onNewImage);
   }

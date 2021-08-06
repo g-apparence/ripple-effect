@@ -6,23 +6,25 @@ import 'package:image/image.dart' as img;
 
 import 'tile_map.dart';
 
-class WaterRipleController {
+class WaterRipple {
   late double width;
   late double height;
   late double ratio;
   double dampening;
+  double pulsations;
   bool updating = false;
 
   late int widthR, heightR;
-  late TilesMap<double> current, previous; //V2
+  late TilesMap<double> current, previous;
   late img.Image _image, _sourceImg;
   DateTime? lastUpdate;
 
-  WaterRipleController._({
+  WaterRipple._({
     required this.width,
     required this.height,
     required this.ratio,
     required this.dampening,
+    required this.pulsations,
     required this.widthR,
     required this.heightR,
     required this.current,
@@ -33,17 +35,18 @@ class WaterRipleController {
         _image = image,
         _sourceImg = srcImage;
 
-  factory WaterRipleController.init(
+  factory WaterRipple.init(
     double width,
     double height,
     double pixelRatio, {
     required Uint8List backgroundBytes,
-    double dampening = .95,
+    double dampening = .985,
+    double pulsations = 2.2,
   }) {
     var widthR = width ~/ pixelRatio;
     var heightR = height ~/ pixelRatio;
     var _image = img.Image.fromBytes(width.toInt(), height.toInt(), backgroundBytes, format: img.Format.rgba);
-    return WaterRipleController._(
+    return WaterRipple._(
       width: width,
       height: height,
       ratio: pixelRatio,
@@ -54,6 +57,7 @@ class WaterRipleController {
       image: _image,
       srcImage: _image.clone(),
       dampening: dampening,
+      pulsations: pulsations,
     );
   }
 
@@ -67,7 +71,7 @@ class WaterRipleController {
           var c2 = previous.getOne(x + 1, y)!;
           var c3 = previous.getOne(x, y - 1)!;
           var c4 = previous.getOne(x, y + 1)!;
-          var color = (c1 + c2 + c3 + c4) / 2 - current.getOne(x, y)!;
+          var color = (c1 + c2 + c3 + c4) / pulsations - current.getOne(x, y)!;
           color *= dampening;
           current.setValue(x, y, color);
         }
@@ -103,6 +107,7 @@ class WaterRipleController {
   void _refraction(int x, int y) {
     var xOffset = (current.getOne(x + 1, y)! - current.getOne(x - 1, y)!).toInt();
     var yOffset = (current.getOne(x, y + 1)! - current.getOne(x, y - 1)!).toInt();
+
     xOffset = xOffset.clamp(-8, 8);
     yOffset = yOffset.clamp(-8, 8);
     var pixel2Src = _sourceImg.getPixel(
