@@ -28,9 +28,10 @@ class WaterRippleProcessData {
 class TouchData {
   double x;
   double y;
+  double force;
   int radius;
 
-  TouchData(this.x, this.y, this.radius);
+  TouchData(this.x, this.y, this.radius, {this.force = 1000});
 }
 
 class WaterRippleProcess {
@@ -79,7 +80,7 @@ class WaterRippleProcess {
     return _stream!;
   }
 
-  void touch(double x, double y, int radius) => _toIsolate?.send(TouchData(x, y, radius));
+  void touch(double x, double y, int radius, double force) => _toIsolate?.send(TouchData(x, y, radius, force: force));
 
   void update() {
     if (_toIsolate == null) {
@@ -112,7 +113,7 @@ class WaterRippleProcess {
 
     _toIsolate.listen((message) {
       if (message is TouchData) {
-        waterRipleController.touch(message.x, message.y, message.radius);
+        waterRipleController.touch(message.x, message.y, message.radius, message.force);
       } else {
         waterRipleController.update();
         data.sendPort.send(waterRipleController.image);

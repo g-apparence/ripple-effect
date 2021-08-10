@@ -24,5 +24,13 @@
             "request": "launch",
             "type": "dart"
         },
+        {
+            "name": "button (profile mode)",
+            "cwd": "example",
+            "program": "lib/button.dart",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
     ]
 }

@@ -90,7 +90,7 @@ class WaterRipple {
     });
   }
 
-  void touch(double x, double y, int radius) {
+  void touch(double x, double y, int radius, double force) {
     var dy = y ~/ ratio;
     var dx = x ~/ ratio;
     var center = v.Vector2(dx.toDouble(), dy.toDouble());
@@ -98,7 +98,7 @@ class WaterRipple {
       for (int x = 1; x < widthR - 1; x += 1) {
         var point = v.Vector2(x.toDouble(), y.toDouble());
         if (point.distanceTo(center) <= radius) {
-          previous.setValue(x, y, 1000);
+          previous.setValue(x, y, force);
         }
       }
     }

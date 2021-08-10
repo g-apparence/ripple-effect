@@ -43,19 +43,50 @@ class _MyPageState extends State<MyPage> {
       body: Stack(
         children: [
           Positioned.fill(
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                image: DecorationImage(image: AssetImage('assets/04.jpg'), fit: BoxFit.cover),
+              ),
+            ),
+          ),
+          Positioned.fill(
             child: RippleEffect(
+              pulsations: 2.8,
+              dampening: .94,
               rippleController: rippleController,
               child: Container(
-                width: double.infinity,
-                height: double.infinity,
-                decoration: BoxDecoration(
-                  image: DecorationImage(image: AssetImage('assets/mountain.png'), fit: BoxFit.cover),
+                alignment: Alignment.topCenter,
+                child: ClipRect(
+                  child: Image.asset(
+                    'assets/04.jpg',
+                    width: double.infinity,
+                    height: 400,
+                    fit: BoxFit.none,
+                    alignment: Alignment.topCenter,
+                  ),
                 ),
               ),
             ),
           ),
           Positioned(
-            bottom: 80,
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.black, Colors.transparent],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 240,
             left: 0,
             right: 0,
             child: Row(
@@ -64,19 +95,19 @@ class _MyPageState extends State<MyPage> {
                 RotatingButton(
                   icon: Icons.stop,
                   onTap: (Offset position) {
-                    rippleController.touch(position);
+                    rippleController.touch(position, 100, radius: 32);
                   },
                 ),
                 RotatingButton(
                   icon: Icons.play_arrow,
                   onTap: (Offset position) {
-                    rippleController.touch(position);
+                    rippleController.touch(position, 100, radius: 24);
                   },
                 ),
                 RotatingButton(
                   icon: Icons.double_arrow,
                   onTap: (Offset position) {
-                    rippleController.touch(position);
+                    rippleController.touch(position, 100, radius: 24);
                   },
                 ),
               ],
@@ -99,7 +130,7 @@ class RotatingButton extends StatefulWidget {
 }
 
 class _RotatingButtonState extends State<RotatingButton> with SingleTickerProviderStateMixin {
-  late final controller = AnimationController(vsync: this, duration: Duration(milliseconds: 1000));
+  late final controller = AnimationController(vsync: this, duration: Duration(milliseconds: 350));
   late final rotationAnimation = CurvedAnimation(
     parent: controller,
     curve: Interval(0, 1, curve: Curves.decelerate),
@@ -108,8 +139,8 @@ class _RotatingButtonState extends State<RotatingButton> with SingleTickerProvid
     parent: controller,
     curve: Interval(
       0,
-      .2,
-      curve: Curves.easeInBack,
+      1,
+      curve: Curves.easeIn,
     ),
   );
 
@@ -144,7 +175,7 @@ class _RotatingButtonState extends State<RotatingButton> with SingleTickerProvid
             padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(bgAnimation.value.clamp(0, .6)),
+              color: Colors.white.withOpacity(sin(bgAnimation.value * pi)),
             ),
             child: Transform.rotate(
               angle: rotationAnimation.value * 2 * pi,

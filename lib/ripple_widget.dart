@@ -12,13 +12,21 @@ import 'ripple_renderobject.dart';
 
 class RippleController extends ChangeNotifier {
   Offset? _position;
+  double? _force;
+  int? _radius;
 
   Offset? get position => _position;
 
+  double? get force => _force;
+
+  int? get radius => _radius;
+
   RippleController();
 
-  void touch(Offset offset) {
+  void touch(Offset offset, double force, {int radius = 1}) {
     _position = offset;
+    _force = force;
+    _radius = radius;
     notifyListeners();
   }
 }
@@ -100,7 +108,7 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
     return GestureDetector(
       onTapDown: (details) {
         if (widget.behavior == RippleEffectBehavior.onTouch) {
-          _process.touch(details.localPosition.dx, details.localPosition.dy, 1);
+          _process.touch(details.localPosition.dx, details.localPosition.dy, 1, 1000);
         }
       },
       child: LayoutBuilder(
@@ -154,7 +162,8 @@ class _RippleEffectState extends State<RippleEffect> with SingleTickerProviderSt
     _process.touch(
       widget.rippleController!.position!.dx,
       widget.rippleController!.position!.dy,
-      4,
+      widget.rippleController!.radius!,
+      widget.rippleController!.force!,
     );
   }
 
