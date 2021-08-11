@@ -6,17 +6,22 @@ import 'package:image/image.dart' as img;
 
 import 'tile_map.dart';
 
+import 'dart:ffi';
+import 'package:ffi/ffi.dart';
+
 class WaterRipple {
-  late double width;
-  late double height;
-  late double ratio;
-  double dampening;
-  double pulsations;
+  final double width;
+  final double height;
+  final double ratio;
+  final double dampening;
+  final double pulsations;
   bool updating = false;
 
-  late int widthR, heightR;
-  late TilesMap<double> current, previous;
-  late img.Image _image, _sourceImg;
+  final int widthR, heightR;
+  TilesMap current, previous;
+  final img.Image _image, _sourceImg;
+  final Pointer<Double> f64;
+  final Pointer<Int32> i32;
   DateTime? lastUpdate;
 
   WaterRipple._({
@@ -31,6 +36,8 @@ class WaterRipple {
     required this.previous,
     required img.Image image,
     required img.Image srcImage,
+    required this.f64,
+    required this.i32,
   })  : updating = false,
         _image = image,
         _sourceImg = srcImage;
@@ -46,6 +53,8 @@ class WaterRipple {
     var widthR = width ~/ pixelRatio;
     var heightR = height ~/ pixelRatio;
     var _image = img.Image.fromBytes(width.toInt(), height.toInt(), backgroundBytes, format: img.Format.rgba);
+    final f64 = malloc.allocate(8).cast<Double>();
+    final i32 = f64.cast<Int32>();
     return WaterRipple._(
       width: width,
       height: height,
@@ -58,36 +67,79 @@ class WaterRipple {
       srcImage: _image.clone(),
       dampening: dampening,
       pulsations: pulsations,
+      f64: f64,
+      i32: i32,
     );
   }
 
   Future update() {
     if (updating) return Future.value();
     updating = true;
-    return Future(() {
-      for (int y = 1; y < heightR - 1; y += 1) {
-        for (int x = 1; x < widthR - 1; x += 1) {
-          var c1 = previous.getOne(x - 1, y)!;
-          var c2 = previous.getOne(x + 1, y)!;
-          var c3 = previous.getOne(x, y - 1)!;
-          var c4 = previous.getOne(x, y + 1)!;
-          var color = (c1 + c2 + c3 + c4) / pulsations - current.getOne(x, y)!;
-          color *= dampening;
-          current.setValue(x, y, color);
-        }
+    return Future(_computeUpdate);
+  }
+
+  void _computeUpdate() {
+    final sw = Stopwatch()..start();
+    final yLimit = (heightR - 1) * widthR;
+    for (int y = widthR; y < yLimit; y += widthR) {
+      for (int x = 1; x < widthR - 1; x += 1) {
+        final tileIndex = x + y;
+        var c1 = previous[tileIndex - 1];
+        var c2 = previous[tileIndex + 1];
+        var c3 = previous[tileIndex - widthR];
+        var c4 = previous[tileIndex + widthR];
+        var color = (c1 + c2 + c3 + c4) / pulsations - current[tileIndex];
+        color *= dampening;
+        current[tileIndex] = color;
       }
-      for (int y = 1; y < heightR - 1; y += 1) {
-        for (int x = 1; x < widthR - 1; x += 1) {
-          _refraction(x, y);
-        }
+    }
+
+    final f64 = this.f64;
+    final i32 = this.i32;
+
+    for (int y = widthR, yi = 1; y < yLimit; y += widthR, yi++) {
+      for (int x = 1; x < widthR - 1; x += 1) {
+        final tileIndex = x + y;
+        var xOffsetD = (current[tileIndex + 1] - current[tileIndex - 1]);
+        var yOffsetD = (current[tileIndex + widthR] - current[tileIndex - widthR]);
+
+        // HACK: work-around lack of fast toInt().
+        // Filed http://dartbug.com/46876
+        // See https://stackoverflow.com/a/17035583/662844 for an explanation
+        // of this trick.
+        f64.value = xOffsetD + 6755399441055744.0;
+        var xOffset = i32.value;
+
+        f64.value = yOffsetD + 6755399441055744.0;
+        var yOffset = i32.value;
+
+        xOffset = clamp(xOffset, -8, 8);
+        yOffset = clamp(yOffset, -8, 8);
+        var pixel2Src = _sourceImg.getPixel(
+          clamp(x + xOffset, 0, widthR - 1),
+          clamp(yi + yOffset, 0, heightR - 1),
+        );
+
+        _image.setPixel(x, yi, pixel2Src);
       }
-      // copy current to previous
-      var temp = previous;
-      previous = current;
-      current = temp;
-      updating = false;
-      lastUpdate = DateTime.now();
-    });
+    }
+    // copy current to previous
+    var temp = previous;
+    previous = current;
+    current = temp;
+    updating = false;
+    lastUpdate = DateTime.now();
+  }
+
+  // HACK: int.clamp is not always inlined. filed http://dartbug.com/46879
+  @pragma('vm:prefer-inline')
+  static int clamp(int v, int x, int y) {
+    if (v < x) {
+      return x;
+    } else if (v > y) {
+      return y;
+    }
+    return v;
   }
 
   void touch(double x, double y, int radius, double force) {
@@ -102,20 +154,6 @@ class WaterRipple {
         }
       }
     }
-  }
-
-  void _refraction(int x, int y) {
-    var xOffset = (current.getOne(x + 1, y)! - current.getOne(x - 1, y)!).toInt();
-    var yOffset = (current.getOne(x, y + 1)! - current.getOne(x, y - 1)!).toInt();
-
-    xOffset = xOffset.clamp(-8, 8);
-    yOffset = yOffset.clamp(-8, 8);
-    var pixel2Src = _sourceImg.getPixel(
-      (x + xOffset).clamp(0, widthR - 1),
-      (y + yOffset).clamp(0, heightR - 1),
-    );
-
-    _image.setPixel(x, y, pixel2Src);
   }
 
   img.Image get image => _image;
