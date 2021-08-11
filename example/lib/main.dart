@@ -26,17 +26,16 @@ class MyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-          padding: EdgeInsets.all(16),
-          child: RippleEffect(
-            child: Container(
-              width: double.infinity,
-              height: 500,
-              decoration: BoxDecoration(
-                image: DecorationImage(image: AssetImage('assets/mountain.png'), fit: BoxFit.cover),
-              ),
-            ),
-          )),
+      body: RippleEffect(
+        pulsations: 2.4,
+        dampening: .95,
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            image: DecorationImage(image: AssetImage('assets/mountain.png'), fit: BoxFit.cover),
+          ),
+        ),
+      ),
     );
   }
 }

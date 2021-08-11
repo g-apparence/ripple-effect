@@ -53,8 +53,8 @@ class _MyPageState extends State<MyPage> {
           ),
           Positioned.fill(
             child: RippleEffect(
-              pulsations: 2.8,
-              dampening: .94,
+              pulsations: 2.4,
+              dampening: .95,
               rippleController: rippleController,
               child: Container(
                 alignment: Alignment.topCenter,
@@ -96,12 +96,16 @@ class _MyPageState extends State<MyPage> {
                   icon: Icons.stop,
                   onTap: (Offset position) {
                     rippleController.touch(position, 100, radius: 32);
+                    Future.delayed(Duration(milliseconds: 500), () => rippleController.touch(position, 150, radius: 24));
                   },
                 ),
                 RotatingButton(
                   icon: Icons.play_arrow,
                   onTap: (Offset position) {
                     rippleController.touch(position, 100, radius: 24);
+                    Future.delayed(Duration(milliseconds: 500), () => rippleController.touch(position, 100, radius: 24));
+                    Future.delayed(Duration(milliseconds: 1000), () => rippleController.touch(position, 100, radius: 24));
+                    Future.delayed(Duration(milliseconds: 1500), () => rippleController.touch(position, 100, radius: 24));
                   },
                 ),
                 RotatingButton(
