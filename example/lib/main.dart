@@ -27,8 +27,8 @@ class MyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: RippleEffect(
-        pulsations: 2.4,
-        dampening: .95,
+        pulsations: 2.2,
+        dampening: .958,
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(

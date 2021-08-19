@@ -15,7 +15,7 @@ class RippleRenderObject extends SingleChildRenderObjectWidget {
   void updateRenderObject(BuildContext context, covariant RippleRender renderObject) {
     renderObject.image = image;
     renderObject.markNeedsPaint();
-    renderObject.markNeedsLayout();
+    // renderObject.markNeedsLayout();
   }
 }
 

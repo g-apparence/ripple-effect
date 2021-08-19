@@ -22,7 +22,6 @@ class WaterRipple {
   final img.Image _image, _sourceImg;
   final Pointer<Double> f64;
   final Pointer<Int32> i32;
-  DateTime? lastUpdate;
 
   WaterRipple._({
     required this.width,
@@ -94,33 +93,23 @@ class WaterRipple {
       }
     }
 
-    final f64 = this.f64;
-    final i32 = this.i32;
-
     for (int y = widthR, yi = 1; y < yLimit; y += widthR, yi++) {
       for (int x = 1; x < widthR - 1; x += 1) {
         final tileIndex = x + y;
         var xOffsetD = (current[tileIndex + 1] - current[tileIndex - 1]);
         var yOffsetD = (current[tileIndex + widthR] - current[tileIndex - widthR]);
 
-        // HACK: work-around lack of fast toInt().
-        // Filed http://dartbug.com/46876
-        // See https://stackoverflow.com/a/17035583/662844 for an explanation
-        // of this trick.
-        f64.value = xOffsetD + 6755399441055744.0;
-        var xOffset = i32.value;
-
-        f64.value = yOffsetD + 6755399441055744.0;
-        var yOffset = i32.value;
+        var xOffset = round(xOffsetD);
+        var yOffset = round(yOffsetD);
 
         xOffset = clamp(xOffset, -8, 8);
         yOffset = clamp(yOffset, -8, 8);
-        var pixel2Src = _sourceImg.getPixel(
+        final index = x + y;
+        final pixel2Src = _sourceImg.getPixel(
           clamp(x + xOffset, 0, widthR - 1),
           clamp(yi + yOffset, 0, heightR - 1),
         );
-
-        _image.setPixel(x, yi, pixel2Src);
+        _image.data[index] = pixel2Src;
       }
     }
     // copy current to previous
@@ -128,7 +117,7 @@ class WaterRipple {
     previous = current;
     current = temp;
     updating = false;
-    lastUpdate = DateTime.now();
+    // print("updated in ${sw.elapsedMilliseconds}ms");
   }
 
   // HACK: int.clamp is not always inlined. filed http://dartbug.com/46879
@@ -140,6 +129,18 @@ class WaterRipple {
       return y;
     }
     return v;
+  }
+
+  @pragma('vm:prefer-inline')
+  int round(double value) {
+    // HACK: work-around lack of fast toInt().
+    // Filed http://dartbug.com/46876
+    // See https://stackoverflow.com/a/17035583/662844 for an explanation
+    // of this trick.
+    final f64 = this.f64;
+    final i32 = this.i32;
+    f64.value = value + 6755399441055744.0;
+    return i32.value;
   }
 
   void touch(double x, double y, int radius, double force) {
