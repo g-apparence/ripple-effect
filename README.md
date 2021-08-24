@@ -1,6 +1,7 @@
 # ripple_effect
 
 Create a 2D ripple effect using flutter and dart (Still experimental)
+[Here is a complete explanation on how it works.](https://medium.com/@mcflyDev/creating-a-2d-ripple-effect-in-flutter-3d73804a2389) 
 
 <p align="center">
 <img src="./docs/gifs/waves.gif" width="320" alt="flutter anchored onboarding screen" />
